@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import {
   Scale, Clock, FileText, Users, BarChart2,
   ChevronDown, Briefcase, Calendar,
-  ArrowRight, CheckCircle, Settings, User,
+  ArrowRight, CheckCircle, Shield, Headphones, Monitor,
 } from "lucide-react";
 import LandingNavbar from "../components/LandingNavbar";
 import Footer from "../components/Footer";
 import Reveal from "../components/Reveal";
-import Contador from "../components/Contador";
 import "./LandingPage.css";
 
 const FEATURES = [
@@ -125,11 +124,27 @@ const PERFIS = [
   },
 ];
 
-const STATS = [
-  { valor: 1240, sufixo: "+", rotulo: "Processos gerenciados",  icone: Scale },
-  { valor: 380,  sufixo: "+", rotulo: "Clientes cadastrados",   icone: Users },
-  { valor: 99,   sufixo: "%", rotulo: "Pontualidade em prazos", icone: CheckCircle },
-  { valor: 8500, sufixo: "+", rotulo: "Documentos organizados", icone: FileText },
+const DIFERENCIAIS = [
+  {
+    icone: Shield,
+    titulo: "Segurança jurídica",
+    descricao: "Dados criptografados e backups automáticos conforme a LGPD.",
+  },
+  {
+    icone: Scale,
+    titulo: "Conformidade CNJ",
+    descricao: "Numeração de processos validada pelo padrão CNJ automaticamente.",
+  },
+  {
+    icone: Headphones,
+    titulo: "Suporte especializado",
+    descricao: "Equipe com formação jurídica para atender seu escritório.",
+  },
+  {
+    icone: Monitor,
+    titulo: "Acesso multiplataforma",
+    descricao: "Desktop, tablet e mobile — acesse de qualquer lugar com segurança.",
+  },
 ];
 
 const PASSOS = [
@@ -204,7 +219,7 @@ export default function LandingPage() {
           <source src="/hero.mp4" type="video/mp4" />
         </video>
         <div className="hero-overlay" aria-hidden="true" />
-        <div className="hero-grid"   aria-hidden="true" />
+        <div className="hero-vinheta" aria-hidden="true" />
 
         <div
           className="hero-conteudo"
@@ -358,19 +373,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── NÚMEROS ── */}
-      <section id="numeros" className="secao--stats">
+      {/* ── DIFERENCIAIS ── */}
+      <section id="numeros" className="secao--diferenciais">
         <div className="secao-inner">
-          <div className="stats-grid">
-            {STATS.map((s, i) => {
-              const Icone = s.icone;
+          <div className="diferenciais-grid">
+            {DIFERENCIAIS.map((d, i) => {
+              const Icone = d.icone;
               return (
-                <Reveal as="div" className="stat-item" key={s.rotulo} delay={i * 100}>
-                  <Icone size={26} strokeWidth={1.25} className="stat-icon" />
-                  <strong className="stat-valor">
-                    <Contador valor={s.valor} sufixo={s.sufixo} />
-                  </strong>
-                  <span className="stat-rotulo">{s.rotulo}</span>
+                <Reveal as="div" className="diferencial-item" key={d.titulo} delay={i * 90}>
+                  <div className="diferencial-icon">
+                    <Icone size={20} strokeWidth={1.25} />
+                  </div>
+                  <div className="diferencial-texto">
+                    <strong>{d.titulo}</strong>
+                    <span>{d.descricao}</span>
+                  </div>
                 </Reveal>
               );
             })}

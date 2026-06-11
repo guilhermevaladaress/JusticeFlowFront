@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus, CheckCircle, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { prazosApi } from '../../api/prazos';
 import { usePermission } from '../../hooks/usePermission';
@@ -83,13 +83,16 @@ export function PrazosList() {
                     <td className="muted truncar">{p.advogadoNome ?? '—'}</td>
                     <td><span className={bc(p.status)}>{p.status}</span></td>
                     {hasRole('Administrador', 'Advogado') && (
-                      <td>
+                      <td style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         {p.status === 'Pendente' && (
                           <button className="btn-acao" onClick={() => cumprirMutation.mutate(p.id)}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--verde)' }}>
                             <CheckCircle size={13} strokeWidth={1.8} /> Cumprir
                           </button>
                         )}
+                        <button className="btn-icone" onClick={() => navigate(`/prazos/${p.id}/editar`)} title="Editar">
+                          <Pencil size={13} strokeWidth={1.8} />
+                        </button>
                       </td>
                     )}
                   </tr>

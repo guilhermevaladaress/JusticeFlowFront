@@ -27,7 +27,8 @@ export function Login() {
       const { token, nomeCompleto, email: em, role } = res.data;
       const user: User = { id: '', email: em, nomeCompleto, role };
       login(token, user);
-      navigate(destino, { replace: true });
+      const paginaDestino = role === 'Cliente' ? '/processos' : destino;
+      navigate(paginaDestino, { replace: true });
     } catch (err: any) {
       setErro(err.response?.data?.mensagem ?? 'Credenciais inválidas. Tente novamente.');
     } finally {
@@ -39,7 +40,7 @@ export function Login() {
     <AuthLayout>
       <form onSubmit={aoEnviar}>
         <div className="auth-form-header">
-          <h1 className="auth-titulo">Bem-vindo de volta</h1>
+          <h1 className="auth-titulo">Bem-vindo</h1>
           <p className="auth-sub">Entre com suas credenciais para acessar o sistema.</p>
         </div>
 

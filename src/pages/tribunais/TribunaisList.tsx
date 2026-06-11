@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { tribunaisApi } from '../../api/tribunais';
 
 export function TribunaisList() {
   const qc = useQueryClient();
   const [importando, setImportando] = useState(false);
+  const [feedback, setFeedback] = useState<{ tipo: 'sucesso' | 'erro'; mensagem: string } | null>(null);
 
   const { data: tribunais, isLoading } = useQuery({
     queryKey: ['tribunais'],
@@ -14,9 +15,15 @@ export function TribunaisList() {
 
   async function importarCnj() {
     setImportando(true);
+    setFeedback(null);
     try {
-      await tribunaisApi.importarCnj();
+      const res = await tribunaisApi.importarCnj();
+      const { criados, atualizados, total } = res.data as any;
       qc.invalidateQueries({ queryKey: ['tribunais'] });
+      setFeedback({ tipo: 'sucesso', mensagem: `Importação concluída: ${criados} criados, ${atualizados} atualizados (${total} registros da base CNJ).` });
+    } catch (err: any) {
+      const msg = err.response?.data?.mensagem ?? 'Erro ao importar tribunais do CNJ.';
+      setFeedback({ tipo: 'erro', mensagem: msg });
     } finally {
       setImportando(false);
     }
@@ -31,6 +38,16 @@ export function TribunaisList() {
           {importando ? 'Importando...' : 'Importar CNJ'}
         </button>
       </div>
+
+      {feedback && (
+        <div className={`form-mensagem-${feedback.tipo === 'sucesso' ? 'sucesso' : 'erro'}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {feedback.tipo === 'sucesso'
+            ? <CheckCircle size={16} strokeWidth={2} />
+            : <AlertTriangle size={16} strokeWidth={2} />}
+          {feedback.mensagem}
+        </div>
+      )}
 
       <div className="card card--overflow">
         {isLoading ? (

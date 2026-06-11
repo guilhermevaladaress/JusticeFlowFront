@@ -2,6 +2,7 @@
  * Gráficos leves em SVG/CSS — sem dependências externas.
  * Usam a paleta institucional JusticeFlow (navy + ouro) via cores passadas por prop.
  */
+import { useState, useRef } from 'react';
 
 export interface Slice {
   label: string;
@@ -22,6 +23,38 @@ export function statusColor(status: string): string {
 }
 
 /* ──────────────────────────────────────────────────────────
+   TOOLTIP INTERNO
+────────────────────────────────────────────────────────── */
+interface TooltipInfo {
+  label: string;
+  value: number;
+  pct?: number;
+  extra?: string;
+  color?: string;
+  x: number;
+  y: number;
+}
+
+function ChartTooltip({ info }: { info: TooltipInfo }) {
+  return (
+    <div className="chart-tooltip" style={{ left: info.x, top: info.y }}>
+      <span className="chart-tooltip-label">
+        {info.color && (
+          <span className="chart-tooltip-dot" style={{ background: info.color }} />
+        )}
+        {info.label}
+      </span>
+      <span className="chart-tooltip-val">
+        {info.extra ?? info.value}
+        {info.pct !== undefined && (
+          <span className="chart-tooltip-pct"> · {info.pct}%</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
    DONUT
 ────────────────────────────────────────────────────────── */
 interface DonutProps {
@@ -39,16 +72,26 @@ export function DonutChart({
   centerValue,
   centerLabel,
 }: DonutProps) {
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const total = data.reduce((s, d) => s + d.value, 0);
   const radius = (size - thickness) / 2;
   const circ = 2 * Math.PI * radius;
   const cx = size / 2;
 
+  const getRelPos = (e: React.MouseEvent) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
   let acc = 0;
 
   return (
     <div className="donut">
-      <div className="donut-svg" style={{ width: size, height: size }}>
+      <div className="donut-svg" ref={containerRef} style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           {/* trilho de fundo */}
           <circle
@@ -77,7 +120,19 @@ export function DonutChart({
                   strokeDashoffset={-acc}
                   transform={`rotate(-90 ${cx} ${cx})`}
                   className="donut-seg"
-                  style={{ animationDelay: `${i * 120}ms` }}
+                  style={{ animationDelay: `${i * 120}ms`, cursor: 'pointer' }}
+                  onMouseMove={(e) => {
+                    const pos = getRelPos(e);
+                    setTooltip({
+                      label: d.label,
+                      value: d.value,
+                      pct: total > 0 ? Math.round((d.value / total) * 100) : 0,
+                      color: d.color,
+                      ...pos,
+                    });
+                    setActiveLabel(d.label);
+                  }}
+                  onMouseLeave={() => { setTooltip(null); setActiveLabel(null); }}
                 />
               );
               acc += len;
@@ -88,19 +143,42 @@ export function DonutChart({
           <span className="donut-center-valor">{centerValue ?? total}</span>
           {centerLabel && <span className="donut-center-rotulo">{centerLabel}</span>}
         </div>
+        {tooltip && <ChartTooltip info={tooltip} />}
       </div>
 
       <ul className="donut-legenda">
-        {data.map((d, i) => (
-          <li key={i}>
-            <span className="donut-bolinha" style={{ background: d.color }} />
-            <span className="donut-leg-label">{d.label}</span>
-            <span className="donut-leg-val">{d.value}</span>
-            <span className="donut-leg-pct">
-              {total > 0 ? Math.round((d.value / total) * 100) : 0}%
-            </span>
-          </li>
-        ))}
+        {data.map((d, i) => {
+          const isActive = activeLabel === d.label;
+          const isDimmed = activeLabel !== null && !isActive;
+          return (
+            <li
+              key={i}
+              style={{
+                opacity: isDimmed ? 0.45 : 1,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              <span
+                className="donut-bolinha"
+                style={{
+                  background: d.color,
+                  transform: isActive ? 'scale(1.35)' : 'scale(1)',
+                  transition: 'transform 0.15s',
+                }}
+              />
+              <span
+                className="donut-leg-label"
+                style={{ fontWeight: isActive ? 600 : undefined, color: isActive ? '#0f172a' : undefined }}
+              >
+                {d.label}
+              </span>
+              <span className="donut-leg-val">{d.value}</span>
+              <span className="donut-leg-pct">
+                {total > 0 ? Math.round((d.value / total) * 100) : 0}%
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -114,22 +192,205 @@ interface BarListProps {
 }
 
 export function BarList({ data }: BarListProps) {
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const max = Math.max(...data.map((d) => d.value), 1);
+
+  const getRelPos = (e: React.MouseEvent) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
   return (
-    <ul className="barlist">
-      {data.map((d, i) => (
-        <li key={i} className="barlist-row">
-          <span className="barlist-label">{d.label}</span>
-          <span className="barlist-track">
-            <span
-              className="barlist-fill"
-              style={{ width: `${(d.value / max) * 100}%`, background: d.color }}
+    <div
+      ref={containerRef}
+      style={{ position: 'relative' }}
+      onMouseLeave={() => { setTooltip(null); setActiveLabel(null); }}
+    >
+      <ul className="barlist">
+        {data.map((d, i) => {
+          const isActive = activeLabel === d.label;
+          const isDimmed = activeLabel !== null && !isActive;
+          return (
+            <li
+              key={i}
+              className="barlist-row"
+              style={{ opacity: isDimmed ? 0.45 : 1, transition: 'opacity 0.15s' }}
+              onMouseMove={(e) => {
+                setTooltip({ label: d.label, value: d.value, color: d.color, ...getRelPos(e) });
+                setActiveLabel(d.label);
+              }}
+            >
+              <span
+                className="barlist-label"
+                style={{ fontWeight: isActive ? 600 : undefined, color: isActive ? '#0f172a' : undefined }}
+              >
+                {d.label}
+              </span>
+              <span className="barlist-track">
+                <span
+                  className="barlist-fill"
+                  style={{ width: `${(d.value / max) * 100}%`, background: d.color }}
+                />
+              </span>
+              <span className="barlist-val">{d.value}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {tooltip && <ChartTooltip info={tooltip} />}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   BARRAS VERTICAIS (novo)
+────────────────────────────────────────────────────────── */
+interface VerticalBarProps {
+  data: Slice[];
+  height?: number;
+}
+
+export function VerticalBarChart({ data, height = 128 }: VerticalBarProps) {
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const max = Math.max(...data.map((d) => d.value), 1);
+
+  const getRelPos = (e: React.MouseEvent) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="vbar-wrap"
+      onMouseLeave={() => { setTooltip(null); setActiveLabel(null); }}
+    >
+      <div className="vbar-chart" style={{ height }}>
+        {data.map((d, i) => {
+          const isActive = activeLabel === d.label;
+          const isDimmed = activeLabel !== null && !isActive;
+          return (
+            <div
+              key={i}
+              className="vbar-col"
+              style={{ opacity: isDimmed ? 0.45 : 1, transition: 'opacity 0.15s' }}
+              onMouseMove={(e) => {
+                setTooltip({ label: d.label, value: d.value, color: d.color, ...getRelPos(e) });
+                setActiveLabel(d.label);
+              }}
+            >
+              <div className="vbar-val-top" />
+              <div className="vbar-track">
+                <div
+                  className="vbar-fill"
+                  style={{
+                    height: `${(d.value / max) * 100}%`,
+                    background: d.color,
+                    animationDelay: `${i * 80}ms`,
+                  }}
+                />
+              </div>
+              <span
+                className="vbar-label"
+                style={{ fontWeight: isActive ? 700 : undefined, color: isActive ? '#0f172a' : undefined }}
+              >
+                {d.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {tooltip && <ChartTooltip info={tooltip} />}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   GRÁFICO FINANCEIRO (honorários)
+────────────────────────────────────────────────────────── */
+interface FinanceBarProps {
+  items: { label: string; value: number; color: string; formatted: string }[];
+  total: number;
+}
+
+export function FinanceBarChart({ items, total }: FinanceBarProps) {
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+  const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const getRelPos = (e: React.MouseEvent) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const rect = containerRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ position: 'relative' }}
+      onMouseLeave={() => { setTooltip(null); setActiveLabel(null); }}
+    >
+      {/* barra empilhada */}
+      <div className="finance-stack">
+        {items.filter((it) => it.value > 0).map((it, i) => {
+          const isDimmed = activeLabel !== null && activeLabel !== it.label;
+          return (
+            <div
+              key={i}
+              className="finance-seg"
+              style={{
+                width: total > 0 ? `${(it.value / total) * 100}%` : '0%',
+                background: it.color,
+                opacity: isDimmed ? 0.35 : 1,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseMove={(e) => {
+                const pct = total > 0 ? Math.round((it.value / total) * 100) : 0;
+                setTooltip({ label: it.label, value: it.value, extra: it.formatted, pct, color: it.color, ...getRelPos(e) });
+                setActiveLabel(it.label);
+              }}
             />
-          </span>
-          <span className="barlist-val">{d.value}</span>
-        </li>
-      ))}
-    </ul>
+          );
+        })}
+      </div>
+      {/* legenda */}
+      <ul className="finance-legenda">
+        {items.map((it, i) => {
+          const isActive = activeLabel === it.label;
+          const isDimmed = activeLabel !== null && !isActive;
+          return (
+            <li
+              key={i}
+              className="finance-leg-item"
+              style={{ opacity: isDimmed ? 0.45 : 1, transition: 'opacity 0.15s' }}
+            >
+              <span
+                className="finance-bolinha"
+                style={{
+                  background: it.color,
+                  transform: isActive ? 'scale(1.35)' : 'scale(1)',
+                  transition: 'transform 0.15s',
+                }}
+              />
+              <span
+                className="finance-leg-label"
+                style={{ fontWeight: isActive ? 600 : undefined, color: isActive ? '#0f172a' : undefined }}
+              >
+                {it.label}
+              </span>
+              <span className="finance-leg-val" style={{ color: it.color }}>{it.formatted}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {tooltip && <ChartTooltip info={tooltip} />}
+    </div>
   );
 }
 

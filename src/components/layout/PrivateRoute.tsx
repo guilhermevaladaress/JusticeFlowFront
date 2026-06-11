@@ -10,6 +10,6 @@ interface PrivateRouteProps {
 export function PrivateRoute({ children, roles }: PrivateRouteProps) {
   const { token, user } = useAuthStore();
   if (!token) return <Navigate to="/login" replace />;
-  if (roles && user && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  if (roles && user && !roles.includes(user.role)) return <Navigate to="/processos" replace />;
   return <>{children}</>;
 }

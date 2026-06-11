@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { processosApi } from '../../api/processos';
 import { tribunaisApi } from '../../api/tribunais';
+import { maskCNJ } from '../../utils/formatters';
 
 const schema = z.object({
   numeroProcesso: z.string().min(1, 'Obrigatório').max(25, 'Máximo 25 caracteres'),
@@ -28,7 +29,7 @@ export function ProcessoForm() {
   const { data: tipos } = useQuery({ queryKey: ['tipos-processo'], queryFn: () => processosApi.listarTipos().then((r) => r.data) });
   const { data: tribunais } = useQuery({ queryKey: ['tribunais'], queryFn: () => tribunaisApi.listar().then((r) => r.data) });
 
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) as any });
+  const { register, handleSubmit, watch, reset, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) as any });
 
   const tribunalId = watch('tribunalId');
   const { data: varas } = useQuery({
@@ -45,7 +46,7 @@ export function ProcessoForm() {
 
   useEffect(() => {
     if (existing) reset({
-      numeroProcesso: existing.numeroProcesso,
+      numeroProcesso: maskCNJ(existing.numeroProcesso),
       titulo: existing.titulo,
       descricao: existing.descricao ?? '',
       dataAbertura: existing.dataAbertura.split('T')[0],
@@ -72,7 +73,13 @@ export function ProcessoForm() {
         <form onSubmit={handleSubmit((d) => mutation.mutate(d as FormData))} className="form-stack">
           <div className="form-campo">
             <label>Número CNJ</label>
-            <input {...register('numeroProcesso')} maxLength={25} className="form-input" placeholder="0000000-00.0000.0.00.0000" />
+            <input
+              {...register('numeroProcesso')}
+              onChange={(e) => setValue('numeroProcesso', maskCNJ(e.target.value), { shouldValidate: true })}
+              maxLength={25}
+              className="form-input"
+              placeholder="0000000-00.0000.0.00.0000"
+            />
             {errors.numeroProcesso && <span className="form-erro">{errors.numeroProcesso.message}</span>}
           </div>
           <div className="form-campo">

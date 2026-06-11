@@ -25,6 +25,7 @@ import { HonorariosList } from './pages/honorarios/HonorariosList.tsx';
 import { Notificacoes } from './pages/notificacoes/Notificacoes.tsx';
 import { Relatorios } from './pages/relatorios/Relatorios.tsx';
 import { Configuracao } from './pages/configuracao/Configuracao.tsx';
+import { MovimentacoesList } from './pages/movimentacoes/MovimentacoesList.tsx';
 import './App.css';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } });
@@ -46,7 +47,7 @@ export default function App() {
 
           {/* rotas internas — exigem autenticação + Layout YBY-style */}
           <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<PrivateRoute roles={ADV}><Dashboard /></PrivateRoute>} />
 
             <Route path="/processos"          element={<ProcessosList />} />
             <Route path="/processos/novo"     element={<PrivateRoute roles={ADV}><ProcessoForm /></PrivateRoute>} />
@@ -59,6 +60,7 @@ export default function App() {
 
             <Route path="/prazos"             element={<PrazosList />} />
             <Route path="/prazos/novo"        element={<PrivateRoute roles={ADV}><PrazoForm /></PrivateRoute>} />
+            <Route path="/prazos/:id/editar"  element={<PrivateRoute roles={ADV}><PrazoForm /></PrivateRoute>} />
 
             <Route path="/documentos"         element={<DocumentosList />} />
             <Route path="/documentos/upload"  element={<PrivateRoute roles={ADV}><DocumentoUpload /></PrivateRoute>} />
@@ -73,6 +75,7 @@ export default function App() {
             <Route path="/contratos/novo"     element={<PrivateRoute roles={ADV}><ContratoForm /></PrivateRoute>} />
 
             <Route path="/honorarios"         element={<PrivateRoute roles={ADV}><HonorariosList /></PrivateRoute>} />
+            <Route path="/movimentacoes"      element={<PrivateRoute roles={ADV}><MovimentacoesList /></PrivateRoute>} />
             <Route path="/notificacoes"       element={<Notificacoes />} />
             <Route path="/relatorios"         element={<PrivateRoute roles={ADV}><Relatorios /></PrivateRoute>} />
             <Route path="/configuracao"       element={<PrivateRoute roles={ADMIN}><Configuracao /></PrivateRoute>} />

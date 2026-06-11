@@ -42,8 +42,8 @@ export default function Footer() {
 
       <div className="rodape-base">
         <div className="rodape-base-inner">
-          <span>© {ano} JusticeFlow · Gestão Jurídica Inteligente</span>
-          <span>Feito para advogados.</span>
+          <span>© {ano} JusticeFlow · Gestão Processual Jurídica</span>
+          <span>Desenvolvido para escritórios de advocacia.</span>
         </div>
       </div>
 

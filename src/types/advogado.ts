@@ -14,3 +14,14 @@ export interface AdvogadoRequest {
   especialidade?: string;
   status?: string;
 }
+
+export interface CreateAdvogadoRequest {
+  nomeCompleto: string;
+  email: string;
+  senha: string;
+  numeroOAB: string;
+  uf: string;
+  especialidade?: string;
+  cpf?: string;
+  telefone?: string;
+}

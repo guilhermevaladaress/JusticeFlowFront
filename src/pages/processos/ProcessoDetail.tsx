@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { processosApi } from '../../api/processos';
-import { formatDate } from '../../utils/formatters';
+import { movimentacoesApi } from '../../api/movimentacoes';
+import { formatDate, formatDateTime } from '../../utils/formatters';
 import { usePermission } from '../../hooks/usePermission';
 
 function bc(s: string) { return 'badge badge--' + s?.toLowerCase().replace(/\s+/g, ''); }
@@ -33,6 +34,12 @@ export function ProcessoDetail() {
     queryKey: ['processo-clientes', id],
     queryFn: () => processosApi.listarClientes(Number(id)).then((r) => r.data),
     enabled: tab === 2,
+  });
+
+  const { data: movimentacoes } = useQuery({
+    queryKey: ['movimentacoes-processo', id],
+    queryFn: () => movimentacoesApi.listarPorProcesso(Number(id)).then((r) => r.data),
+    enabled: tab === 6,
   });
 
   const statusMutation = useMutation({
@@ -135,8 +142,26 @@ export function ProcessoDetail() {
               </ul>
             )
           )}
-          {tab >= 3 && (
+          {tab >= 3 && tab < 6 && (
             <div className="estado">Use os menus de Audiências / Prazos / Documentos para filtrar por processo.</div>
+          )}
+          {tab === 6 && (
+            !movimentacoes ? <div className="estado">Carregando...</div> :
+            movimentacoes.length === 0 ? <div className="estado">Nenhuma movimentação registrada.</div> : (
+              <ul className="lista-divide" style={{ padding: 0 }}>
+                {movimentacoes.map((m) => (
+                  <li key={m.id} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className={'badge badge--' + m.tipo.toLowerCase()}>{m.tipo}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        {formatDateTime(m.dataHora)} · {m.usuario}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: '#0f172a', margin: 0 }}>{m.descricao}</p>
+                  </li>
+                ))}
+              </ul>
+            )
           )}
         </div>
       </div>

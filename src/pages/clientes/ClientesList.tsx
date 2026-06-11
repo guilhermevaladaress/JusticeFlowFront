@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Search, Plus, X, MapPin, Loader2 } from 'lucide-react';
 import { clientesApi } from '../../api/clientes';
-import { formatDate, formatCNPJ } from '../../utils/formatters';
+import { formatDate, formatCNPJ, maskCPF, maskCNPJ, maskCEP, maskTelefone } from '../../utils/formatters';
 import type { CnpjResponse, ClienteRequest } from '../../types/cliente';
 
 function bc(s: string) { return 'badge badge--' + s?.toLowerCase().replace(/\s+/g, ''); }
@@ -52,14 +52,15 @@ export function ClientesList() {
     try {
       const res = await clientesApi.consultarCnpj(cnpjBusca.replace(/\D/g, ''));
       setCnpjResult(res.data);
-    } catch {
-      setCnpjError('CNPJ não encontrado ou inválido.');
+    } catch (err: any) {
+      setCnpjError(err.response?.data?.mensagem ?? 'CNPJ não encontrado ou inválido.');
     }
   }
 
   async function handleCep(valor: string) {
-    setForm(f => ({ ...f, cep: valor }));
-    const limpo = valor.replace(/\D/g, '');
+    const masked = maskCEP(valor);
+    setForm(f => ({ ...f, cep: masked }));
+    const limpo = masked.replace(/\D/g, '');
     if (limpo.length !== 8) return;
     setBuscandoCep(true);
     setErroCep('');
@@ -118,8 +119,9 @@ export function ClientesList() {
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
             value={cnpjBusca}
-            onChange={(e) => setCnpjBusca(e.target.value)}
+            onChange={(e) => setCnpjBusca(maskCNPJ(e.target.value))}
             placeholder="00.000.000/0001-00"
+            maxLength={18}
             className="form-input"
             style={{ maxWidth: 220 }}
           />
@@ -208,19 +210,19 @@ export function ClientesList() {
                 </div>
                 <div className="form-campo">
                   <label>Telefone</label>
-                  <input className="form-input" maxLength={15} value={form.telefone ?? ''} onChange={e => set('telefone', e.target.value)} placeholder="(00) 00000-0000" />
+                  <input className="form-input" maxLength={15} value={form.telefone ?? ''} onChange={e => set('telefone', maskTelefone(e.target.value))} placeholder="(00) 00000-0000" />
                 </div>
 
                 {pfAtivo ? (
                   <div className="form-campo">
                     <label>CPF</label>
-                    <input className="form-input" maxLength={14} value={form.cpf ?? ''} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+                    <input className="form-input" maxLength={14} value={form.cpf ?? ''} onChange={e => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" />
                   </div>
                 ) : (
                   <>
                     <div className="form-campo">
                       <label>CNPJ</label>
-                      <input className="form-input" maxLength={18} value={form.cnpj ?? ''} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
+                      <input className="form-input" maxLength={18} value={form.cnpj ?? ''} onChange={e => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" />
                     </div>
                     <div className="form-campo">
                       <label>Razão Social</label>

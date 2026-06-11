@@ -1,12 +1,38 @@
 import { Link } from "react-router-dom";
-import { Scale, Shield, Clock, FileText } from "lucide-react";
+import { Scale, Clock, FileText, Users, Shield, Gavel } from "lucide-react";
 import "./AuthLayout.css";
 
-const FEATURES = [
-  { icone: Scale,    texto: "Gestão completa de processos jurídicos" },
-  { icone: Shield,   texto: "Controle de acesso por perfil de usuário" },
-  { icone: Clock,    texto: "Alertas automáticos de prazos críticos" },
-  { icone: FileText, texto: "Documentos e contratos centralizados" },
+const CARDS = [
+  {
+    icone: Scale,
+    titulo: "Processos",
+    desc: "Gerencie todos os processos jurídicos em um só lugar com visão completa.",
+  },
+  {
+    icone: Clock,
+    titulo: "Prazos",
+    desc: "Alertas automáticos para nunca perder um prazo crítico.",
+  },
+  {
+    icone: FileText,
+    titulo: "Documentos",
+    desc: "Armazenamento centralizado de contratos e peças processuais.",
+  },
+  {
+    icone: Users,
+    titulo: "Clientes",
+    desc: "Cadastro completo de clientes com histórico e controle de acesso.",
+  },
+  {
+    icone: Gavel,
+    titulo: "Audiências",
+    desc: "Agendamento e acompanhamento de todas as audiências.",
+  },
+  {
+    icone: Shield,
+    titulo: "Segurança",
+    desc: "Controle de acesso por perfil com dados protegidos.",
+  },
 ];
 
 const PARTICULAS = [
@@ -47,7 +73,7 @@ export default function AuthLayout({ children }) {
             <img src="/logo.png" alt="JusticeFlow" className="auth-esq-logo" />
           </Link>
 
-          {/* Bloco central: hero + features */}
+          {/* Bloco central */}
           <div className="auth-esq-centro">
             <div className="auth-esq-hero">
               <h2>Gestão Jurídica<br /><span>Inteligente</span></h2>
@@ -56,14 +82,17 @@ export default function AuthLayout({ children }) {
 
             <div className="auth-esq-divider" />
 
-            <ul className="auth-esq-features">
-              {FEATURES.map(({ icone: Icone, texto }, i) => (
-                <li key={i}>
-                  <Icone size={14} strokeWidth={2} />
-                  <span>{texto}</span>
-                </li>
+            <div className="auth-esq-stats">
+              {CARDS.map(({ icone: Icone, titulo, desc }, i) => (
+                <div key={i} className="auth-stat-card">
+                  <div className="auth-stat-icone">
+                    <Icone size={15} strokeWidth={2} />
+                  </div>
+                  <p className="auth-stat-titulo">{titulo}</p>
+                  <p className="auth-stat-desc">{desc}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       </div>

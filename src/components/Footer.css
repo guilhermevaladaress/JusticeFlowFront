@@ -1,16 +1,20 @@
 .rodape {
-  margin-top: 40px;
-  background: var(--azul-escuro);
+  background: #060e1c;
   color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  overflow: hidden;
 }
+
 
 .rodape-topo {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 52px 24px 36px;
+  padding: 64px 24px 44px;
   display: grid;
   grid-template-columns: 1.7fr 1fr 1fr 1.3fr;
   gap: 40px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
@@ -22,7 +26,7 @@
 }
 
 .rodape-logo-img {
-  height: 48px;
+  height: 64px;
   width: auto;
   display: block;
   margin-bottom: 16px;
@@ -45,13 +49,13 @@
 }
 
 .rodape-col h4 {
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  color: var(--azul-claro);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 5px;
-  opacity: 0.9;
+  margin-bottom: 8px;
+  opacity: 1;
 }
 
 .rodape-col a {
@@ -74,28 +78,34 @@
 }
 
 .rodape-base {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+  z-index: 1;
 }
 
 .rodape-base-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 18px 24px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.2px;
 }
 
 .rodape-faixa {
-  height: 4px;
+  height: 2px;
   background: linear-gradient(
     90deg,
-    var(--azul-claro) 0 33.33%,
-    var(--azul) 33.33% 66.66%,
-    var(--azul-escuro) 66.66% 100%
+    transparent 0%,
+    rgba(200, 169, 81, 0.5) 25%,
+    rgba(200, 169, 81, 0.9) 50%,
+    rgba(200, 169, 81, 0.5) 75%,
+    transparent 100%
   );
 }

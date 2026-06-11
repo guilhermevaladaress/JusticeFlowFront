@@ -2,13 +2,13 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Scale, Calendar, Clock, FileText,
   Users, Briefcase, BookOpen, DollarSign, Building2,
-  BarChart2, Settings, Bell, X
+  BarChart2, Settings, Bell, X, History
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: [] },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Administrador', 'Advogado'] },
   { to: '/processos', icon: Scale, label: 'Processos', roles: [] },
   { to: '/audiencias', icon: Calendar, label: 'Audiências', roles: [] },
   { to: '/prazos', icon: Clock, label: 'Prazos', roles: [] },
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/advogados', icon: Briefcase, label: 'Advogados', roles: ['Administrador'] },
   { to: '/contratos', icon: BookOpen, label: 'Contratos', roles: ['Administrador', 'Advogado'] },
   { to: '/honorarios', icon: DollarSign, label: 'Honorários', roles: ['Administrador', 'Advogado'] },
+  { to: '/movimentacoes', icon: History, label: 'Movimentações', roles: ['Administrador', 'Advogado'] },
   { to: '/tribunais', icon: Building2, label: 'Tribunais', roles: ['Administrador'] },
   { to: '/relatorios', icon: BarChart2, label: 'Relatórios', roles: ['Administrador', 'Advogado'] },
   { to: '/notificacoes', icon: Bell, label: 'Notificações', roles: [] },

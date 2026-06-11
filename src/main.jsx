@@ -15,11 +15,14 @@ import '@fontsource/inter/600.css'
 import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import LoadingScreen from './components/LoadingScreen.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <LoadingScreen>
+        <App />
+      </LoadingScreen>
     </ErrorBoundary>
   </StrictMode>,
 )

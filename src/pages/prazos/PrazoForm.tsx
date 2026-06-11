@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { prazosApi } from '../../api/prazos';
 import { processosApi } from '../../api/processos';
@@ -19,6 +19,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function PrazoForm() {
+  const { id } = useParams();
+  const isEdit = !!id;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [error, setError] = useState('');
@@ -26,25 +28,44 @@ export function PrazoForm() {
   const { data: processos } = useQuery({ queryKey: ['processos'], queryFn: () => processosApi.listar().then((r) => r.data) });
   const { data: tipos } = useQuery({ queryKey: ['tipos-prazo'], queryFn: () => prazosApi.listarTipos().then((r) => r.data) });
   const { data: advogados } = useQuery({ queryKey: ['advogados'], queryFn: () => advogadosApi.listar().then((r) => r.data) });
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ['prazo', id],
+    queryFn: () => prazosApi.detalhar(Number(id)).then((r) => r.data),
+    enabled: isEdit,
+  });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) as any });
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) as any });
+
+  useEffect(() => {
+    if (existing) reset({
+      processoId: existing.processoId,
+      tipoPrazoId: existing.tipoPrazoId,
+      descricao: existing.descricao,
+      dataVencimento: existing.dataVencimento.slice(0, 10),
+      observacoes: existing.observacoes ?? '',
+      advogadoId: existing.advogadoId,
+    });
+  }, [existing, reset]);
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) => prazosApi.criar(data as any),
+    mutationFn: (data: FormData) =>
+      isEdit ? prazosApi.atualizar(Number(id), data as any) : prazosApi.criar(data as any),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['prazos'] }); navigate('/prazos'); },
     onError: (err: any) => setError(err.response?.data?.mensagem ?? 'Erro ao salvar.'),
   });
 
+  if (isEdit && isLoading) return <div className="estado" style={{ paddingTop: 80 }}>Carregando...</div>;
+
   return (
     <div className="section-gap">
       <div className="page-header">
-        <div><h1>Novo Prazo</h1></div>
+        <div><h1>{isEdit ? 'Editar Prazo' : 'Novo Prazo'}</h1></div>
       </div>
       <div className="form-wrap">
         <form onSubmit={handleSubmit((d) => mutation.mutate(d as FormData))} className="form-stack">
           <div className="form-campo">
             <label>Processo</label>
-            <select {...register('processoId')} className="form-select">
+            <select {...register('processoId')} className="form-select" disabled={isEdit}>
               <option value="">Selecione</option>
               {processos?.map((p) => <option key={p.id} value={p.id}>{p.titulo}</option>)}
             </select>

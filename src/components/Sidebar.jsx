@@ -3,13 +3,13 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Scale, Calendar, Clock, FileText,
   Users, Briefcase, BookOpen, DollarSign, Building2,
-  BarChart2, Settings, Bell, LogOut, LogIn, X, User,
+  BarChart2, Settings, Bell, LogOut, LogIn, X, User, History,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import "./Sidebar.css";
 
 const LINKS = [
-  { to: "/dashboard",    rotulo: "Dashboard",    icone: LayoutDashboard },
+  { to: "/dashboard",    rotulo: "Dashboard",    icone: LayoutDashboard, soAdv: true },
   { to: "/processos",    rotulo: "Processos",     icone: Scale },
   { to: "/audiencias",   rotulo: "Audiências",    icone: Calendar },
   { to: "/prazos",       rotulo: "Prazos",        icone: Clock },
@@ -18,10 +18,11 @@ const LINKS = [
 ];
 
 const LINKS_JURIDICO = [
-  { to: "/clientes",    rotulo: "Clientes",    icone: Users },
-  { to: "/contratos",   rotulo: "Contratos",   icone: BookOpen },
-  { to: "/honorarios",  rotulo: "Honorários",  icone: DollarSign },
-  { to: "/relatorios",  rotulo: "Relatórios",  icone: BarChart2 },
+  { to: "/clientes",      rotulo: "Clientes",       icone: Users },
+  { to: "/contratos",     rotulo: "Contratos",       icone: BookOpen },
+  { to: "/honorarios",    rotulo: "Honorários",      icone: DollarSign },
+  { to: "/movimentacoes", rotulo: "Movimentações",   icone: History },
+  { to: "/relatorios",    rotulo: "Relatórios",      icone: BarChart2 },
 ];
 
 const LINKS_ADMIN = [
@@ -64,7 +65,7 @@ export default function Sidebar() {
       <aside className={`sidebar${mobileAberto ? " sidebar--aberta" : ""}`}>
         {/* topo: logo + toggle */}
         <div className="sidebar-topo">
-          <Link to="/dashboard" className="sidebar-brand" onClick={fecharMobile}>
+          <Link to={ehAdvogado ? "/dashboard" : "/processos"} className="sidebar-brand" onClick={fecharMobile}>
             <img src="/logo.png" alt="JusticeFlow" />
           </Link>
           <button
@@ -88,7 +89,7 @@ export default function Sidebar() {
         <div className="sidebar-corpo">
           <span className="sidebar-secao">Navegação</span>
           <nav className="sidebar-nav">
-            {LINKS.map((l) => {
+            {LINKS.filter((l) => !l.soAdv || ehAdvogado).map((l) => {
               const Icone = l.icone;
               return (
                 <NavLink key={l.to} to={l.to} className={itemClasse} onClick={fecharMobile}>

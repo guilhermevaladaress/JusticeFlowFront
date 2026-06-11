@@ -4,18 +4,20 @@ import { differenceInDays, parseISO } from 'date-fns';
 import {
   Scale, Calendar, Clock, FileText, Users, TrendingUp,
   AlertTriangle, CheckCircle, Briefcase, ArrowUpRight,
-  PieChart, BarChart3, Gavel, Flame, AlertCircle,
+  PieChart, BarChart3, Gavel, Flame, AlertCircle, DollarSign,
 } from 'lucide-react';
 import { relatoriosApi } from '../../api/relatorios';
-import { formatDate, formatDateTime } from '../../utils/formatters';
+import { formatDate, formatDateTime, formatMoney } from '../../utils/formatters';
 import { usePermission } from '../../hooks/usePermission';
 import { useAuthStore } from '../../store/authStore';
 import { useCountUp } from '../../hooks/useCountUp';
 import {
-  DonutChart, BarList, ChartEmpty, statusColor, type Slice,
+  DonutChart, BarList, VerticalBarChart, FinanceBarChart,
+  ChartEmpty, statusColor, type Slice,
 } from '../../components/charts/Charts';
 import type {
   DashboardData, RelatorioAudiencias, RelatorioPrazos,
+  RelatorioHonorarios, RelatorioProcessos,
   PrazoResumo, AudienciaResumo, ProcessoResumo,
 } from '../../types/relatorio';
 
@@ -81,6 +83,8 @@ function urgencia(dataVencimento: string): { icon: React.ElementType; cor: strin
   return null;
 }
 
+const TIPO_CORES = ['#1B3A6B', '#2563eb', '#c8a951', '#5b21b6', '#2e7d32', '#e65100'];
+
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════════════════════ */
@@ -103,6 +107,18 @@ export function Dashboard() {
     queryFn: () => relatoriosApi.prazos().then((r) => r.data as RelatorioPrazos),
   });
 
+  const { data: relProcessos } = useQuery({
+    queryKey: ['rel-processos'],
+    queryFn: () => relatoriosApi.processos().then((r) => r.data as RelatorioProcessos),
+    enabled: isAdmin(),
+  });
+
+  const { data: relHonorarios } = useQuery({
+    queryKey: ['rel-honorarios'],
+    queryFn: () => relatoriosApi.honorarios().then((r) => r.data as RelatorioHonorarios),
+    enabled: isAdmin(),
+  });
+
   const cards = data ? [
     { label: 'Processos Ativos',  value: data.processosAtivos,  icon: Scale,    cor: '#1B3A6B', to: '/processos' },
     { label: 'Audiências Hoje',   value: data.audienciasHoje,   icon: Calendar, cor: '#2563eb', to: '/audiencias' },
@@ -113,12 +129,17 @@ export function Dashboard() {
       : []),
   ] : [];
 
+  /* slices dos gráficos principais */
   const audSlices: Slice[] = (relAud?.porStatus ?? [])
     .map((g) => ({ label: g.status, value: g.total, color: statusColor(g.status) }))
     .filter((s) => s.value > 0);
 
   const prazoSlices: Slice[] = (relPrazos?.porStatus ?? [])
     .map((g) => ({ label: g.status, value: g.total, color: statusColor(g.status) }))
+    .filter((s) => s.value > 0);
+
+  const audTipoSlices: Slice[] = (relAud?.porTipo ?? [])
+    .map((g, i) => ({ label: g.tipo, value: g.total, color: TIPO_CORES[i % TIPO_CORES.length] }))
     .filter((s) => s.value > 0);
 
   const panorama: Slice[] = data ? [
@@ -130,15 +151,26 @@ export function Dashboard() {
     ...(!isCliente() ? [{ label: 'Clientes', value: data.totalClientes, color: '#5b21b6' }] : []),
   ].filter((s) => s.value > 0) : [];
 
+  /* slices admin */
+  const procStatusSlices: Slice[] = (relProcessos?.porStatus ?? [])
+    .map((g) => ({ label: g.status, value: g.total, color: statusColor(g.status) }))
+    .filter((s) => s.value > 0);
+
+  const honorariosItems = relHonorarios ? [
+    { label: 'Recebido',  value: relHonorarios.valorRecebido, color: '#2e7d32', formatted: formatMoney(relHonorarios.valorRecebido) },
+    { label: 'Pendente',  value: relHonorarios.valorPendente, color: '#c8a951', formatted: formatMoney(relHonorarios.valorPendente) },
+    { label: 'Atrasado',  value: relHonorarios.valorAtrasado, color: '#c62828', formatted: formatMoney(relHonorarios.valorAtrasado) },
+  ] : [];
+
   const resumo = [
     { label: 'Processos encerrados', value: data?.processosEncerrados, cor: '#2e7d32', ic: CheckCircle },
     { label: 'Audiências do mês',    value: data?.audienciasMes,       cor: '#2563eb', ic: Calendar },
     { label: 'Prazos cumpridos',     value: data?.prazosCumpridos,     cor: '#c8a951', ic: Gavel },
-    { label: 'Honorários atrasados', value: data?.honariosAtrasados,   cor: '#c62828', ic: AlertTriangle },
-    ...(isAdmin()
-      ? [{ label: 'Advogados ativos', value: data?.totalAdvogados, cor: '#1B3A6B', ic: Briefcase }]
-      : []),
-    { label: 'Novos clientes (mês)', value: data?.novosClientesMes, cor: '#5b21b6', ic: Users },
+    ...(isAdmin() ? [
+      { label: 'Honorários atrasados', value: data?.honariosAtrasados, cor: '#c62828', ic: AlertTriangle },
+      { label: 'Advogados ativos',     value: data?.totalAdvogados,    cor: '#1B3A6B', ic: Briefcase },
+      { label: 'Novos clientes (mês)', value: data?.novosClientesMes,  cor: '#5b21b6', ic: Users },
+    ] : []),
   ];
 
   return (
@@ -154,7 +186,7 @@ export function Dashboard() {
             {new Date().toLocaleDateString('pt-BR', {
               weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
             })}
-            {' · '}visão geral do escritório
+            {' · '}{isAdmin() ? 'visão geral do escritório' : 'minha visão'}
           </p>
         </div>
         {!isCliente() && (
@@ -182,7 +214,7 @@ export function Dashboard() {
         }
       </div>
 
-      {/* ── gráficos ───────────────────────────────────────── */}
+      {/* ── gráficos principais (2×2) ──────────────────────── */}
       <div className="charts-grid">
         <div className="card card-anim" style={{ '--card-delay': '0ms' } as React.CSSProperties}>
           <div className="card-header">
@@ -213,7 +245,46 @@ export function Dashboard() {
             ? <ChartEmpty />
             : <BarList data={panorama} />}
         </div>
+
+        <div className="card card-anim" style={{ '--card-delay': '240ms' } as React.CSSProperties}>
+          <div className="card-header">
+            <div className="card-header-icon"><Calendar size={16} strokeWidth={1.8} /></div>
+            <h2 className="card-header-title">Audiências por tipo</h2>
+          </div>
+          {audTipoSlices.length === 0
+            ? <ChartEmpty />
+            : <VerticalBarChart data={audTipoSlices} height={128} />}
+        </div>
       </div>
+
+      {/* ── gráficos admin ─────────────────────────────────── */}
+      {isAdmin() && (procStatusSlices.length > 0 || relHonorarios) && (
+        <div className="charts-grid">
+          {procStatusSlices.length > 0 && (
+            <div className="card card-anim" style={{ '--card-delay': '0ms' } as React.CSSProperties}>
+              <div className="card-header">
+                <div className="card-header-icon"><Scale size={16} strokeWidth={1.8} /></div>
+                <h2 className="card-header-title">Processos por status</h2>
+              </div>
+              <BarList data={procStatusSlices} />
+            </div>
+          )}
+
+          {relHonorarios && (
+            <div className="card card-anim" style={{ '--card-delay': '80ms' } as React.CSSProperties}>
+              <div className="card-header">
+                <div className="card-header-icon"><DollarSign size={16} strokeWidth={1.8} /></div>
+                <h2 className="card-header-title">Honorários</h2>
+                <span className="card-header-badge">{formatMoney(relHonorarios.valorTotal)}</span>
+              </div>
+              <FinanceBarChart
+                items={honorariosItems}
+                total={relHonorarios.valorTotal}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── conteúdo principal ─────────────────────────────── */}
       <div className="app-grid">
@@ -306,7 +377,7 @@ export function Dashboard() {
         {/* coluna lateral */}
         <div className="painel-col">
           {/* Próximas audiências */}
-          <div className="card card-anim" style={{ '--card-delay': '40ms' } as React.CSSProperties}>
+          <div className="card card-anim" style={{ '--card-delay': '40ms', minHeight: 340 } as React.CSSProperties}>
             <div className="card-header">
               <div className="card-header-icon"><Calendar size={16} strokeWidth={1.8} /></div>
               <h2 className="card-header-title">Próximas audiências</h2>
@@ -348,8 +419,8 @@ export function Dashboard() {
                   <span className="resumo-ic" style={{ background: `${cor}1a`, color: cor }}>
                     <Ic size={15} strokeWidth={2} />
                   </span>
-                  <span className="resumo-label">{label}</span>
                   <AnimatedResumoValue value={value} />
+                  <span className="resumo-label">{label}</span>
                 </div>
               ))}
             </div>

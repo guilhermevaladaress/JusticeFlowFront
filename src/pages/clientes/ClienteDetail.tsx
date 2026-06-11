@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Edit2, MapPin, X, Loader2 } from 'lucide-react';
 import { clientesApi } from '../../api/clientes';
 import { contratosApi } from '../../api/contratos';
-import { formatDate, formatCNPJ } from '../../utils/formatters';
+import { formatDate, formatCNPJ, maskCPF, maskCNPJ, maskCEP, maskTelefone } from '../../utils/formatters';
 import type { ClienteRequest } from '../../types/cliente';
 
 function bc(s: string) { return 'badge badge--' + s?.toLowerCase().replace(/\s+/g, ''); }
@@ -51,12 +51,12 @@ export function ClienteDetail() {
       nomeCompleto: cliente.nomeCompleto,
       email:        cliente.email,
       tipo:         cliente.tipo,
-      cpf:          cliente.cpf          ?? '',
-      cnpj:         cliente.cnpj         ?? '',
+      cpf:          maskCPF(cliente.cpf          ?? ''),
+      cnpj:         maskCNPJ(cliente.cnpj        ?? ''),
       razaoSocial:  cliente.razaoSocial  ?? '',
       nomeFantasia: cliente.nomeFantasia ?? '',
-      telefone:     cliente.telefone     ?? '',
-      cep:          cliente.cep          ?? '',
+      telefone:     maskTelefone(cliente.telefone ?? ''),
+      cep:          maskCEP(cliente.cep           ?? ''),
       logradouro:   cliente.logradouro   ?? '',
       numero:       cliente.numero       ?? '',
       complemento:  cliente.complemento  ?? '',
@@ -75,8 +75,9 @@ export function ClienteDetail() {
   }
 
   async function handleCep(valor: string) {
-    setForm(f => f ? { ...f, cep: valor } : f);
-    const limpo = valor.replace(/\D/g, '');
+    const masked = maskCEP(valor);
+    setForm(f => f ? { ...f, cep: masked } : f);
+    const limpo = masked.replace(/\D/g, '');
     if (limpo.length !== 8) return;
     setBuscandoCep(true);
     setErroCep('');
@@ -242,19 +243,19 @@ export function ClienteDetail() {
                 </div>
                 <div className="form-campo">
                   <label>Telefone</label>
-                  <input className="form-input" maxLength={15} value={form.telefone ?? ''} onChange={e => set('telefone', e.target.value)} placeholder="(00) 00000-0000" />
+                  <input className="form-input" maxLength={15} value={form.telefone ?? ''} onChange={e => set('telefone', maskTelefone(e.target.value))} placeholder="(00) 00000-0000" />
                 </div>
 
                 {pfAtivo ? (
                   <div className="form-campo">
                     <label>CPF</label>
-                    <input className="form-input" maxLength={14} value={form.cpf ?? ''} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+                    <input className="form-input" maxLength={14} value={form.cpf ?? ''} onChange={e => set('cpf', maskCPF(e.target.value))} placeholder="000.000.000-00" />
                   </div>
                 ) : (
                   <>
                     <div className="form-campo">
                       <label>CNPJ</label>
-                      <input className="form-input" maxLength={18} value={form.cnpj ?? ''} onChange={e => set('cnpj', e.target.value)} />
+                      <input className="form-input" maxLength={18} value={form.cnpj ?? ''} onChange={e => set('cnpj', maskCNPJ(e.target.value))} placeholder="00.000.000/0001-00" />
                     </div>
                     <div className="form-campo">
                       <label>Razão Social</label>
