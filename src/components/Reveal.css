@@ -1,0 +1,58 @@
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 0.7s ease;
+  will-change: opacity, transform;
+}
+
+.reveal--up    { transform: translateY(30px); }
+.reveal--left  { transform: translateX(-44px); }
+.reveal--right { transform: translateX(44px); }
+.reveal--zoom  { transform: scale(0.92); }
+.reveal--blur  { transform: translateY(18px); filter: blur(10px); }
+
+.reveal--on {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* brilho que cruza o card quando ele aparece */
+.reveal-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+
+.reveal-shine.reveal--on::after {
+  animation: reveal-shine 0.9s ease 0.25s 1;
+}
+
+@keyframes reveal-shine {
+  to { transform: translateX(130%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .reveal-shine.reveal--on::after { animation: none; }
+}

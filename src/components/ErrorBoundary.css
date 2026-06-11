@@ -1,0 +1,35 @@
+.erro-boundary {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  background: var(--cinza-claro);
+}
+
+.erro-boundary h1 {
+  font-size: 26px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.erro-boundary p {
+  color: var(--texto);
+  opacity: 0.65;
+  font-weight: 300;
+  max-width: 360px;
+}
+
+.erro-btn {
+  margin-top: 22px;
+  padding: 11px 24px;
+  border: none;
+  border-radius: var(--raio-sm);
+  background: var(--azul);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
