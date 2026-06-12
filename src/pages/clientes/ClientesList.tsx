@@ -35,6 +35,7 @@ export function ClientesList() {
   const [buscandoCep,  setBuscandoCep]  = useState(false);
   const [erroCep,      setErroCep]      = useState('');
   const [erroForm,     setErroForm]     = useState('');
+  const [senhaCriada,  setSenhaCriada]  = useState<string | null>(null);
 
   const { data: clientes, isLoading } = useQuery({
     queryKey: ['clientes'],
@@ -43,7 +44,11 @@ export function ClientesList() {
 
   const criar = useMutation({
     mutationFn: (data: ClienteRequest) => clientesApi.criar(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['clientes'] }); fecharModal(); },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['clientes'] });
+      fecharModal();
+      setSenhaCriada(res.data.senhaTemporaria);
+    },
     onError: (err: any) => setErroForm(err.response?.data?.mensagem ?? 'Erro ao cadastrar cliente.'),
   });
 
@@ -89,6 +94,10 @@ export function ClientesList() {
     setForm(FORM_VAZIO);
     setErroCep('');
     setErroForm('');
+  }
+
+  function fecharSenhaCriada() {
+    setSenhaCriada(null);
   }
 
   function aoEnviar(e: React.FormEvent) {
@@ -170,6 +179,31 @@ export function ClientesList() {
           </div>
         )}
       </div>
+
+      {/* Modal senha temporária */}
+      {senhaCriada && (
+        <div className="modal-overlay" onClick={fecharSenhaCriada}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Cliente cadastrado</h2>
+              <button type="button" className="btn-icone" onClick={fecharSenhaCriada} aria-label="Fechar">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: 12 }}>
+                Cliente criado com sucesso. Compartilhe a senha temporária abaixo com o cliente — ele poderá alterá-la após o primeiro acesso.
+              </p>
+              <div style={{ background: '#f3f4f6', borderRadius: 8, padding: '12px 16px', fontFamily: 'monospace', fontSize: '1rem', letterSpacing: '0.05em', textAlign: 'center', color: '#111827' }}>
+                {senhaCriada}
+              </div>
+              <div className="form-acoes" style={{ marginTop: 20 }}>
+                <button className="btn-primario" style={{ width: '100%' }} onClick={fecharSenhaCriada}>Entendido</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal novo cliente */}
       {modalAberto && (
